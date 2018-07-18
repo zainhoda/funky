@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/faiface/funky/compile"
 	"github.com/faiface/funky/parse"
 	"github.com/faiface/funky/runtime"
 )
 
-func Run(main string) *runtime.Value {
+func Run(main string) (value *runtime.Box, cleanup func()) {
+	stats := flag.Bool("stats", false, "print stats after running program")
 	flag.Parse()
+
+	compilationStart := time.Now()
 
 	var definitions []parse.Definition
 
@@ -39,7 +43,17 @@ func Run(main string) *runtime.Value {
 	program, err := env.Compile(main)
 	handleErr(err)
 
-	return program
+	runningStart := time.Now()
+
+	return program, func() {
+		if *stats {
+			fmt.Fprintf(os.Stderr, "\n")
+			fmt.Fprintf(os.Stderr, "STATS\n")
+			fmt.Fprintf(os.Stderr, "reductions:       %d\n", runtime.Reductions)
+			fmt.Fprintf(os.Stderr, "compilation time: %v\n", runningStart.Sub(compilationStart))
+			fmt.Fprintf(os.Stderr, "running time:     %v\n", time.Since(runningStart))
+		}
+	}
 }
 
 func handleErr(err error) {

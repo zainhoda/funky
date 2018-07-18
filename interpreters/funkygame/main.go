@@ -14,12 +14,13 @@ import (
 )
 
 func main() {
-	program := funky.Run("main")
+	program, cleanup := funky.Run("main")
+	defer cleanup()
 	title, w, h, images, game := runLoader(program)
 	runGame(title, w, h, images, game)
 }
 
-func runLoader(loader *runtime.Value) (title string, w, h int, images []*ebiten.Image, game *runtime.Value) {
+func runLoader(loader *runtime.Box) (title string, w, h int, images []*ebiten.Image, game *runtime.Box) {
 	for {
 		switch loader.Alternative() {
 		case 0: // start
@@ -46,7 +47,7 @@ func runLoader(loader *runtime.Value) (title string, w, h int, images []*ebiten.
 	}
 }
 
-func runGame(title string, w, h int, images []*ebiten.Image, game *runtime.Value) {
+func runGame(title string, w, h int, images []*ebiten.Image, game *runtime.Box) {
 	update := func(screen *ebiten.Image) error {
 		screen.Fill(color.Black)
 		switch game.Alternative() {
